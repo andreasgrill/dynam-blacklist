@@ -9,6 +9,7 @@ import json
 import logging
 import logging.handlers
 import urllib2
+import time
 
 def load_config(config_files):
     """ loads json configuration files
