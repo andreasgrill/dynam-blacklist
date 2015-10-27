@@ -1,11 +1,11 @@
 {
-	"blacklist_url": "http://URL-TO-BLACKLIST",
+    "blacklist_url": "http://URL-TO-BLACKLIST",
     "iptables_chain": "delegate_forward",
     "blocked_local_client_address_v4": "CLIENT-TO-BLOCK-IP",
     "blocked_local_client_address_v6": "",
-	"timeout": 5,
-	"log_path": "/var/log/dynam-blacklist.log",
-	"verbose": true,
+    "timeout": 5,
+    "log_path": "/var/log/dynam-blacklist.log",
+    "verbose": true,
     "notification_cmd": "",
     "ip4tables_cmd": "iptables",
     "ip6tables_cmd": "ip6tables"

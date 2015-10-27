@@ -2,7 +2,6 @@ import socket
 import os
 import os.path
 import sys
-from itertools import izip, cycle
 import re
 import traceback
 import subprocess
@@ -71,7 +70,7 @@ def insert_blacklist_rules(ip_addresses):
                         + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
                          else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
                          else [])
-                        + ["-j", "DROP"])
+                        + ["-j", "REJECT"])
 
 def excepthook(excType, excValue, tb):
     """ this function is called whenever an exception is not catched """
@@ -87,7 +86,7 @@ def excepthook(excType, excValue, tb):
 
 def main():
     """ main program procedure. it retrieves the blacklisted domains,
-    looks them up and inserts the DROP rules. """
+    looks them up and inserts the blocking rules. """
     global config
     blacklist = get_blacklist(config["blacklist_url"], config["timeout"])
     ip_addresses = get_blacklisted_ipaddresses(blacklist)
