@@ -55,11 +55,34 @@ def get_blacklist(url, timeout):
         logging.warning("Blacklist could not be fetched.")
         return False
 
-def get_blacklisted_ipaddresses(blacklist):
+def lookup_ipaddresses(domains):
     """ looks up the provided domains and returns a single list of all
     corresponding IP addresses """
-    ip_addresses_lists = [lookup_ips(addr.strip()) for addr in blacklist.split() if addr.strip()]
+    ip_addresses_lists = [lookup_ips(addr.strip()) for addr in domains.split() if addr.strip()]
     return list(set([ip for address_list in ip_addresses_lists for ip in address_list])) 
+
+def get_blacklisted_ipaddresses():
+    """ provides the caller with a list of blacklisted ipaddresses that
+    are either cached or just retrieved."""
+    global config
+
+    if (config["blacklist_cache_path"]
+        and os.path.exists(config["blacklist_cache_path"])
+        and time.time() - os.path.getmtime(config["blacklist_cache_path"]) < (60 * config["max_cache_duration_in_minutes"])
+        ):
+        with open(config["blacklist_cache_path"], "r") as f:
+            return f.readlines()
+    else:
+        blacklist = get_blacklist(config["blacklist_url"], config["timeout"])
+        addresses = lookup_ipaddresses(blacklist)
+
+        if config["blacklist_cache_path"]:
+            with open(config["blacklist_cache_path"], "w") as f:
+                for addr in addresses:
+                    f.write("{address}\n".format(address = addr))
+
+        return addresses
+    
 
 def insert_blacklist_rules(ip_addresses):
     """ inserts the iptables rules to block the provided ip_addresses """
@@ -87,10 +110,8 @@ def excepthook(excType, excValue, tb):
 def main():
     """ main program procedure. it retrieves the blacklisted domains,
     looks them up and inserts the blocking rules. """
-    global config
-    blacklist = get_blacklist(config["blacklist_url"], config["timeout"])
-    ip_addresses = get_blacklisted_ipaddresses(blacklist)
-    insert_blacklist_rules(ip_addresses)
+
+    insert_blacklist_rules(get_blacklisted_ipaddresses())
 
 
 if __name__ == "__main__":

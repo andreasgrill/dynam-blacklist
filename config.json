@@ -4,6 +4,8 @@
     "blocked_local_client_address_v4": "CLIENT-TO-BLOCK-IP",
     "blocked_local_client_address_v6": "",
     "timeout": 5,
+    "blacklist_cache_path": "/tmp/dynam-blacklist",
+    "max_cache_duration_in_minutes": 720,
     "log_path": "/var/log/dynam-blacklist.log",
     "verbose": true,
     "notification_cmd": "",
