@@ -1,6 +1,6 @@
 {
     "blacklist_url": "http://URL-TO-BLACKLIST",
-    "iptables_chain": "delegate_forward",
+    "iptables_chain": "FORWARD",
     "blocked_local_client_address_v4": "CLIENT-TO-BLOCK-IP",
     "blocked_local_client_address_v6": "",
     "timeout": 5,
