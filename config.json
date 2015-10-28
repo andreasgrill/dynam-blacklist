@@ -10,5 +10,7 @@
     "verbose": true,
     "notification_cmd": "",
     "ip4tables_cmd": "iptables",
-    "ip6tables_cmd": "ip6tables"
+    "ip6tables_cmd": "ip6tables",
+    "prevent_duplicates": true,
+    "iptables_compatability_mode": false
 }

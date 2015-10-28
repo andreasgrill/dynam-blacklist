@@ -89,22 +89,42 @@ def insert_blacklist_rules(ip_addresses):
     """ inserts the iptables rules to block the provided ip_addresses """
     global config
     for addr in ip_addresses:
-        try:
-            # Check if the rule is already existing
-            subprocess.check_output(  [config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
-                                    + ["-C", config["iptables_chain"], "-d", addr] 
-                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
-                                     else [])
-                                    + ["-j", "REJECT"])
-        except:
-            # Add the rule as it does not exist yet
-            subprocess.check_output(  [config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
+        insert_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
                                     + ["-I", config["iptables_chain"], "1", "-d", addr] 
                                     + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
                                      else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
                                      else [])
                                     + ["-j", "REJECT"])
+        check_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
+                                    + ["-C", config["iptables_chain"], "-d", addr] 
+                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
+                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
+                                     else [])
+                                    + ["-j", "REJECT"])
+        delete_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
+                                    + ["-D", config["iptables_chain"], "-d", addr] 
+                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
+                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
+                                     else [])
+                                    + ["-j", "REJECT"])
+
+        if config["prevent_duplicates"]:
+            if not config["iptables_compatability_mode"]:
+                try:
+                    # Check if the rule is already existing
+                    subprocess.check_output(check_command)
+                except:
+                    # Add the rule as it does not exist yet
+                    subprocess.check_output(insert_command)
+            else:
+                # remove the rule
+                subprocess.call(delete_command)
+
+                # add the fule
+                subprocess.check_output(insert_command)
+        else:
+            # just add the rules
+            subprocess.check_output(insert_command)
 
 def excepthook(excType, excValue, tb):
     """ this function is called whenever an exception is not catched """
