@@ -89,12 +89,22 @@ def insert_blacklist_rules(ip_addresses):
     """ inserts the iptables rules to block the provided ip_addresses """
     global config
     for addr in ip_addresses:
-        subprocess.call( [config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
-                        + ["-I", config["iptables_chain"], "1", "-d", addr] 
-                        + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                         else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
-                         else [])
-                        + ["-j", "REJECT"])
+        try:
+            # Check if the rule is already existing
+            subprocess.check_output(  [config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
+                                    + ["-C", config["iptables_chain"], "-d", addr] 
+                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
+                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
+                                     else [])
+                                    + ["-j", "REJECT"])
+        except:
+            # Add the rule as it does not exist yet
+            subprocess.check_output(  [config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
+                                    + ["-I", config["iptables_chain"], "1", "-d", addr] 
+                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
+                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
+                                     else [])
+                                    + ["-j", "REJECT"])
 
 def excepthook(excType, excValue, tb):
     """ this function is called whenever an exception is not catched """
