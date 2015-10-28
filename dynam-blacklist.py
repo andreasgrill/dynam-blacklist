@@ -72,7 +72,7 @@ def get_blacklisted_ipaddresses():
         and time.time() - os.path.getmtime(config["blacklist_cache_path"]) < (60 * config["max_cache_duration_in_minutes"])
         ):
         with open(config["blacklist_cache_path"], "r") as f:
-            return f.readlines()
+            return [addr.strip() for addr in f.readlines()]
     else:
         blacklist = get_blacklist(config["blacklist_url"], config["timeout"])
         addresses = lookup_ipaddresses(blacklist)
@@ -117,8 +117,9 @@ def main():
 
 if __name__ == "__main__":
     # configuration
+    __location__ = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
     sys.excepthook = excepthook
-    config = load_config(["config.json"])
+    config = load_config([os.path.join(__location__,"config.json")])
     log_path = config["log_path"]
 
     # init logging
