@@ -111,22 +111,22 @@ def insert_blacklist_rules(ip_addresses):
 def get_routing_command(routing_operation, address):
     """ Creates the shell command for the specified address and routing_operation. """
     global config
-    iptables = config["ip4tables_cmd"] if ip_version(addr) == 4 else config["ip6tables_cmd"]
-    source_address = (["-s", config["blocked_local_client_address_v4"]] if ip_version(addr) == 4 and config["blocked_local_client_address_v4"] 
-                         else ["-s", config["blocked_local_client_address_v6"]] if ip_version(addr) == 6 and config["blocked_local_client_address_v6"] 
+    iptables = config["ip4tables_cmd"] if ip_version(address) == 4 else config["ip6tables_cmd"]
+    source_address = (["-s", config["blocked_local_client_address_v4"]] if ip_version(address) == 4 and config["blocked_local_client_address_v4"] 
+                         else ["-s", config["blocked_local_client_address_v6"]] if ip_version(address) == 6 and config["blocked_local_client_address_v6"] 
                          else [])
     routing_action = ["-j", "REJECT"]
 
     if routing_operation == 'insert':
-        return ([iptables, "-I", config["iptables_chain"], "1", "-d", addr] 
+        return ([iptables, "-I", config["iptables_chain"], "1", "-d", address] 
                                     + source_address
                                     + routing_action)
     elif routing_type == 'check':
-        return ([iptables, "-C", config["iptables_chain"], "-d", addr] 
+        return ([iptables, "-C", config["iptables_chain"], "-d", address] 
                                     + source_address
                                     + routing_action)
     elif routing_operation == 'delete':
-        return ([iptables, "-D", config["iptables_chain"], "-d", addr] 
+        return ([iptables, "-D", config["iptables_chain"], "-d", address] 
                                     + source_address
                                     + routing_action)
     else:
