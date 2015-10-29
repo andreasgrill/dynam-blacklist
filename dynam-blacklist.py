@@ -90,38 +90,48 @@ def insert_blacklist_rules(ip_addresses):
     global config
     
     for addr in ip_addresses:
-        iptables = config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]
-        source_address = (["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                             else ["-s", config["blocked_local_client_address_v6"]] if ":" in addr and config["blocked_local_client_address_v6"] 
-                             else [])
-
-        insert_command = ([iptables, "-I", config["iptables_chain"], "1", "-d", addr] 
-                                    + source_address
-                                    + ["-j", "REJECT"])
-        check_command  = ([iptables, "-C", config["iptables_chain"], "-d", addr] 
-                                    + source_address
-                                    + ["-j", "REJECT"])
-        delete_command = ([iptables, "-D", config["iptables_chain"], "-d", addr] 
-                                    + source_address
-                                    + ["-j", "REJECT"])
-
         if config["prevent_duplicates"]:
             if not config["iptables_compatability_mode"]:
                 try:
                     # Check if the rule is already existing
-                    subprocess.check_output(check_command)
+                    subprocess.check_output(get_routing_command('check', addr))
                 except:
                     # Add the rule as it does not exist yet
-                    subprocess.check_output(insert_command)
+                    subprocess.check_output(get_routing_command('insert', addr))
             else:
                 # remove the rule
-                subprocess.call(delete_command)
+                subprocess.call(get_routing_command('delete', addr))
 
                 # add the fule
-                subprocess.check_output(insert_command)
+                subprocess.check_output(get_routing_command('insert', addr))
         else:
             # just add the rules
-            subprocess.check_output(insert_command)
+            subprocess.check_output(get_routing_command('insert', addr))
+
+def get_routing_command(routing_operation, address):
+    """ Creates the shell command for the specified address and routing_operation. """
+    global config
+    iptables = config["ip4tables_cmd"] if ip_version(addr) == 4 else config["ip6tables_cmd"]
+    source_address = (["-s", config["blocked_local_client_address_v4"]] if ip_version(addr) == 4 and config["blocked_local_client_address_v4"] 
+                         else ["-s", config["blocked_local_client_address_v6"]] if ip_version(addr) == 6 and config["blocked_local_client_address_v6"] 
+                         else [])
+    routing_action = ["-j", "REJECT"]
+
+    if routing_operation == 'insert':
+        return ([iptables, "-I", config["iptables_chain"], "1", "-d", addr] 
+                                    + source_address
+                                    + routing_action)
+    elif routing_type == 'check':
+        return ([iptables, "-C", config["iptables_chain"], "-d", addr] 
+                                    + source_address
+                                    + routing_action)
+    elif routing_operation == 'delete':
+        return ([iptables, "-D", config["iptables_chain"], "-d", addr] 
+                                    + source_address
+                                    + routing_action)
+    else:
+        logging.error("Unknown routing_operation provided for get_routing_command.")
+        return ""
 
 def excepthook(excType, excValue, tb):
     """ this function is called whenever an exception is not catched """
