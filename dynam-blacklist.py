@@ -32,7 +32,7 @@ def lookup_ips(address):
     except:
         logging.debug("could not resolve '{}'".format(address))
 
-    # return a empty list with an empty element
+    # return an empty list with an empty element
     return [""]
 
 def ip_version(address):
@@ -88,24 +88,21 @@ def get_blacklisted_ipaddresses():
 def insert_blacklist_rules(ip_addresses):
     """ inserts the iptables rules to block the provided ip_addresses """
     global config
+    
     for addr in ip_addresses:
-        insert_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
-                                    + ["-I", config["iptables_chain"], "1", "-d", addr] 
-                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
-                                     else [])
+        iptables = config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]
+        source_address = (["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
+                             else ["-s", config["blocked_local_client_address_v6"]] if ":" in addr and config["blocked_local_client_address_v6"] 
+                             else [])
+
+        insert_command = ([iptables, "-I", config["iptables_chain"], "1", "-d", addr] 
+                                    + source_address
                                     + ["-j", "REJECT"])
-        check_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
-                                    + ["-C", config["iptables_chain"], "-d", addr] 
-                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
-                                     else [])
+        check_command  = ([iptables, "-C", config["iptables_chain"], "-d", addr] 
+                                    + source_address
                                     + ["-j", "REJECT"])
-        delete_command = ([config["ip4tables_cmd"] if ":" not in addr else config["ip6tables_cmd"]]
-                                    + ["-D", config["iptables_chain"], "-d", addr] 
-                                    + (   ["-s", config["blocked_local_client_address_v4"]] if ":" not in addr and config["blocked_local_client_address_v4"] 
-                                     else ["-s", config["blocked_local_client_address_v6"]] if ":"     in addr and config["blocked_local_client_address_v6"] 
-                                     else [])
+        delete_command = ([iptables, "-D", config["iptables_chain"], "-d", addr] 
+                                    + source_address
                                     + ["-j", "REJECT"])
 
         if config["prevent_duplicates"]:
