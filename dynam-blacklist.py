@@ -121,7 +121,7 @@ def get_routing_command(routing_operation, address):
         return ([iptables, "-I", config["iptables_chain"], "1", "-d", address] 
                                     + source_address
                                     + routing_action)
-    elif routing_type == 'check':
+    elif routing_operation == 'check':
         return ([iptables, "-C", config["iptables_chain"], "-d", address] 
                                     + source_address
                                     + routing_action)
