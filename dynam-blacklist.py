@@ -106,7 +106,7 @@ def insert_blacklist_rules(ip_addresses):
                 subprocess.check_output(get_routing_command('insert', addr))
         else:
             # just add the rules
-            subprocess.check_output(get_routing_command('insert', addr))
+            subprocess.call(get_routing_command('insert', addr))
 
 def get_routing_command(routing_operation, address):
     """ Creates the shell command for the specified address and routing_operation. """
