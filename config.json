@@ -12,5 +12,6 @@
     "ip4tables_cmd": "iptables",
     "ip6tables_cmd": "ip6tables",
     "prevent_duplicates": true,
-    "iptables_compatability_mode": false
+    "iptables_compatability_mode": false,
+    "block_action": "REJECT"
 }

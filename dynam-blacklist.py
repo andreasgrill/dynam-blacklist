@@ -88,34 +88,36 @@ def get_blacklisted_ipaddresses():
 def insert_blacklist_rules(ip_addresses):
     """ inserts the iptables rules to block the provided ip_addresses """
     global config
+
+    block_action = config["block_action"]
     
     for addr in ip_addresses:
         if config["prevent_duplicates"]:
             if not config["iptables_compatability_mode"]:
                 try:
                     # Check if the rule is already existing
-                    subprocess.check_output(get_routing_command('check', addr))
+                    subprocess.check_output(get_routing_command('check', addr, block_action))
                 except:
                     # Add the rule as it does not exist yet
-                    subprocess.check_output(get_routing_command('insert', addr))
+                    subprocess.check_output(get_routing_command('insert', addr, block_action))
             else:
                 # remove the rule
-                subprocess.call(get_routing_command('delete', addr))
+                subprocess.call(get_routing_command('delete', addr, block_action))
 
                 # add the fule
-                subprocess.check_output(get_routing_command('insert', addr))
+                subprocess.check_output(get_routing_command('insert', addr, block_action))
         else:
             # just add the rules
-            subprocess.call(get_routing_command('insert', addr))
+            subprocess.call(get_routing_command('insert', addr, block_action))
 
-def get_routing_command(routing_operation, address):
+def get_routing_command(routing_operation, address, block_action):
     """ Creates the shell command for the specified address and routing_operation. """
     global config
     iptables = config["ip4tables_cmd"] if ip_version(address) == 4 else config["ip6tables_cmd"]
     source_address = (["-s", config["blocked_local_client_address_v4"]] if ip_version(address) == 4 and config["blocked_local_client_address_v4"] 
                          else ["-s", config["blocked_local_client_address_v6"]] if ip_version(address) == 6 and config["blocked_local_client_address_v6"] 
                          else [])
-    routing_action = ["-j", "REJECT"]
+    routing_action = ["-j", block_action]
 
     if routing_operation == 'insert':
         return ([iptables, "-I", config["iptables_chain"], "1", "-d", address] 
